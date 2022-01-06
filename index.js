@@ -1,7 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
-
+const cors = require('cors')
 // Import models
 const Post = require('./src/models/post');
 
@@ -9,7 +9,17 @@ const Post = require('./src/models/post');
 const app = express()
 
 // Define DB Connection
-const db = mongoose.connect('mongodb://127.0.0.1:27017/assignment_4')
+//mongoose.connect("mongodb://127.0.0.1:27017/assignment_4")
+app.use(cors())
+mongoose.connect("mongodb+srv://piyush:piyush@ass4db.dxkom.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",{ 
+  useNewUrlParser:true,
+  
+  useUnifiedTopology:true
+  
+}).then(()=>{
+  console.log("server connected");
+}).catch((err)=>console.log("connection failed"));
+
 
 
 app.use(bodyParser.json())
@@ -17,8 +27,11 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 app.get('/', function(req, res) {
   // handle the request for root route
-  res.send({ ping: 'pong' })
+  res.send({ student:'Piyush',
+           team:'Kalam'})
 })
+
+
 
 // Operations: Create, Read, Update, Delete (CRUD)
 app.post('/posts', function(req, res) {
@@ -27,6 +40,7 @@ app.post('/posts', function(req, res) {
   const title = req.body.title
   const author = req.body.author
   const content = req.body.content
+  const desc=req.body.desc
  //res.send({title:title,author:author,content:content})
 
   // Assign values to Post model
@@ -34,7 +48,7 @@ app.post('/posts', function(req, res) {
   post.title = title
   post.author = author
   post.content = content
-
+  post.desc=desc
  // Save the post
   post.save(function(error, savedPost) {
     if(error) {
@@ -46,20 +60,36 @@ app.post('/posts', function(req, res) {
     }
   })
 });
-
-// Get list of all posts
-app.get('/posts', function(req, res) {
-    Post.find({}, function(error, posts) {
-      if(error) {
-        // send error response
-        res.status(422).send({ error: 'Unable to fetch posts '})
-      } else {
-        // send success response
-        res.status(200).send(posts)
-      }
-    })
-  })
   
+// Get list of all posts
+// app.get('/posts', function(req, res) {
+//   Post.find({}, function(error, posts) {
+//     if(error) {
+//       // send error response
+//       res.status(422).send({ error: 'Unable to fetch posts '})
+//     } else {
+//       // send success response
+//       res.status(200).send(posts)
+//     }
+//   })
+// })
+app.get('/posts', function(req, res) {
+  const title = req.query.title
+  const author = req.query.author
+  var filter = {}
+  if (title!=null) 
+    filter['title'] = title
+  if (author!=null) 
+    filter['author'] = author
+  Post.find(filter, function(error, post) {
+    if(error) 
+      res.status(500).send({error: 'Unable to fetch post(s)!'})
+    else 
+      res.status(200).send(post)
+  })
+})
+
+
 
 // Tasks for me
 // 1. Creating API to get details of a single Post
@@ -110,6 +140,6 @@ app.get('/posts/:id', (req, res)=>{
 
 
 
-app.listen(3001, function() {
-  console.log('Server is running at port 3001....')
+app.listen(8080, function() {
+  console.log('Server is running at port 8080....')
 })
